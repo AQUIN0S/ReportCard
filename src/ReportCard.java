@@ -11,32 +11,35 @@ import java.util.*;
  */
 public class ReportCard {
 
+    private final double maxPercentage = 100.0;
+    private final double minPercentage = 0.0;
+
     private String studentName;
     private String teacherName;
     private String schoolName;
 
-    // This value can be set via either the setOverallGrade() method or the setClassesAndGrades() method, whichever is
+    // This value can be set via either the setOverallGrade() method or the setCoursesAndGrades() method, whichever is
     // called last.
     private double overallGrade;
 
     // Because each grade (represented by doubles to show percentages), apart from overallGrade, is associated with a
     // class that the student takes, a HashMap is used to represent the concept.
-    private HashMap<String, Double> classesAndGrades = new HashMap<>();
+    private HashMap<String, Double> coursesAndGrades = new HashMap<>();
 
     /**
      * Create a new instance of a Student Report class using the individual grades
      * @param studentName       string containing the student's name.
      * @param teacherName       string containing the teacher's name.
      * @param schoolName        string containing the school's name.
-     * @param classesAndGrades  a HashMap representing each class/course the student has taken, and each corresponding
+     * @param coursesAndGrades  a HashMap representing each class/course the student has taken, and each corresponding
      *                          grade.
      */
     public ReportCard(String studentName, String teacherName,
-                      String schoolName, HashMap<String, Double> classesAndGrades) {
+                      String schoolName, HashMap<String, Double> coursesAndGrades) {
         this.studentName = studentName;
         this.teacherName = teacherName;
         this.schoolName = schoolName;
-        setClassesAndGrades(classesAndGrades);
+        setCoursesAndGrades(coursesAndGrades);
     }
 
     public ReportCard(String studentName, String teacherName, String schoolName, double overallGrade) {
@@ -53,22 +56,23 @@ public class ReportCard {
      * @param classesAndGrades  a HashMap with keys containing a string with the class/course name, and a double with
      *                          the corresponding grade of that class/course.
      */
-    public void setClassesAndGrades(HashMap<String, Double> classesAndGrades) {
+    public void setCoursesAndGrades(HashMap<String, Double> classesAndGrades) {
         Iterator iterator = classesAndGrades.entrySet().iterator();
 
         // While there's still a set/entry that contains the student's grade and class, add that to HashMap
-        // this.classesAndGrades. If the user entered an invalid grade, prompt them to enter a correct grade and
+        // this.coursesAndGrades. If the user entered an invalid grade, prompt them to enter a correct grade and
         // add that new grade with the class instead.
         while (iterator.hasNext()) {
-            Map.Entry nextClassAndGrade = (Map.Entry) iterator.next();
+            Map.Entry nextCourseAndGrade = (Map.Entry) iterator.next();
 
-            if ((double) nextClassAndGrade.getValue() < 0.0 || (double) nextClassAndGrade.getValue() > 100.0) {
-                double newGrade = promptUserForValidGrade((String) nextClassAndGrade.getKey(),
-                        (double) nextClassAndGrade.getValue());
-                this.classesAndGrades.put((String) nextClassAndGrade.getKey(), newGrade);
+            if ((double) nextCourseAndGrade.getValue() < minPercentage ||
+                    (double) nextCourseAndGrade.getValue() > maxPercentage) {
+                double newGrade = promptUserForValidGrade((String) nextCourseAndGrade.getKey(),
+                        (double) nextCourseAndGrade.getValue());
+                this.coursesAndGrades.put((String) nextCourseAndGrade.getKey(), newGrade);
             } else {
-                this.classesAndGrades.put((String) nextClassAndGrade.getKey(),
-                        (double) nextClassAndGrade.getValue());
+                this.coursesAndGrades.put((String) nextCourseAndGrade.getKey(),
+                        (double) nextCourseAndGrade.getValue());
             }
 
             iterator.remove();
@@ -77,11 +81,11 @@ public class ReportCard {
         // Set overallGrade to be the average of the individual grades.
         double totalOfGrades = 0.0;
 
-        for (double individualGrade : this.classesAndGrades.values()) {
+        for (double individualGrade : this.coursesAndGrades.values()) {
             totalOfGrades += individualGrade;
         }
 
-        overallGrade = totalOfGrades / this.classesAndGrades.size();
+        overallGrade = totalOfGrades / this.coursesAndGrades.size();
     }
 
     public void setStudentName(String studentName) {
@@ -96,6 +100,26 @@ public class ReportCard {
         this.teacherName = teacherName;
     }
 
+    public void addCourseAndGrade(String courseName, double courseGrade) {
+
+        if (courseGrade > maxPercentage || courseGrade < minPercentage) {
+            double newGrade = promptUserForValidGrade(courseName, courseGrade);
+            coursesAndGrades.put(courseName, newGrade);
+        } else {
+            coursesAndGrades.put(courseName, courseGrade);
+        }
+
+    }
+
+    public double getCourseGrade(String courseName) {
+        if (coursesAndGrades.get(courseName) == null) {
+            System.out.println("This student is not associated with that course.");
+            return minPercentage;
+        } else {
+            return coursesAndGrades.get(courseName);
+        }
+    }
+
     /**
      * Don't let any student access this method! You've been warned...
      *
@@ -106,8 +130,8 @@ public class ReportCard {
         this.overallGrade = overallGrade;
     }
 
-    public HashMap<String, Double> getClassesAndGrades() {
-        return classesAndGrades;
+    public HashMap<String, Double> getCoursesAndGrades() {
+        return coursesAndGrades;
     }
 
     public String getStudentName() {
@@ -136,9 +160,9 @@ public class ReportCard {
         // (from what I understood, concatenating a string means copying the entire string each time).
         StringBuilder fullReport = new StringBuilder(initialReport);
 
-        if (!classesAndGrades.isEmpty()) {
-            fullReport.append("Classes:\n");
-            for (Map.Entry classAndGrade : classesAndGrades.entrySet()) {
+        if (!coursesAndGrades.isEmpty()) {
+            fullReport.append("Courses:\n");
+            for (Map.Entry classAndGrade : coursesAndGrades.entrySet()) {
                 fullReport.append('\t');
                 fullReport.append(classAndGrade.getKey());
                 fullReport.append(" - ");
@@ -176,6 +200,8 @@ public class ReportCard {
 
         ReportCard emilysReport = new ReportCard("Emily Webb", "J. Whittaker",
                 "Victoria University", emilysGrades);
+        emilysReport.addCourseAndGrade("Art", 74.3);
+        System.out.println(emilysReport.getCourseGrade("Mathematics"));
         System.out.println(emilysReport);
 
         double joshesOverallGrade = 75.4;
